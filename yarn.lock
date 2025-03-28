@@ -19628,14 +19628,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:1.6.5":
-  version: 1.6.5
-  resolution: "axios@npm:1.6.5"
+"axios@npm:1.8.2":
+  version: 1.8.2
+  resolution: "axios@npm:1.8.2"
   dependencies:
-    follow-redirects: ^1.15.4
+    follow-redirects: ^1.15.6
     form-data: ^4.0.0
     proxy-from-env: ^1.1.0
-  checksum: e28d67b2d9134cb4608c44d8068b0678cfdccc652742e619006f27264a30c7aba13b2cd19c6f1f52ae195b5232734925928fb192d5c85feea7edd2f273df206d
+  checksum: c47a43b79a058aa9e53a65bec9ade35c9f6e76a3999c795a79a2d205fb5f803fd4245497a0209a9727cbbe4f558791dd852ad2c168c5fc030259c11598ed8fd7
   languageName: node
   linkType: hard
 
@@ -28422,7 +28422,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"follow-redirects@npm:^1.0.0, follow-redirects@npm:^1.12.1, follow-redirects@npm:^1.14.9, follow-redirects@npm:^1.15.4, follow-redirects@npm:^1.15.6":
+"follow-redirects@npm:^1.0.0, follow-redirects@npm:^1.12.1, follow-redirects@npm:^1.14.9, follow-redirects@npm:^1.15.6":
   version: 1.15.6
   resolution: "follow-redirects@npm:1.15.6"
   peerDependenciesMeta:
@@ -46810,7 +46810,7 @@ __metadata:
     "@uniswap/v3-sdk": 3.25.2
     "@uniswap/v4-sdk": 1.21.2
     apollo-link-rest: 0.9.0
-    axios: 1.6.5
+    axios: 1.8.2
     date-fns: 2.30.0
     dayjs: 1.11.7
     depcheck: 1.4.7
@@ -47903,7 +47903,7 @@ __metadata:
     "@uniswap/universal-router-sdk": 4.19.5
     "@uniswap/v3-sdk": 3.25.2
     apollo3-cache-persist: 0.14.1
-    axios: 1.6.5
+    axios: 1.8.2
     dayjs: 1.11.7
     depcheck: 1.4.7
     eslint: 8.44.0
