@@ -1,6 +1,7 @@
 import {
   BatchSize,
   DatadogProvider,
+  DatadogProviderConfiguration,
   DdRum,
   SdkVerbosity,
   TrackingConsent,
@@ -15,7 +16,8 @@ import {
   DynamicConfigs,
 } from 'uniswap/src/features/gating/configs'
 import { getDynamicConfigValue } from 'uniswap/src/features/gating/hooks'
-import { datadogEnabledBuild, isE2EMode, isJestRun, localDevDatadogEnabled } from 'utilities/src/environment/constants'
+import { datadogEnabledBuild, isJestRun, localDevDatadogEnabled } from 'utilities/src/environment/constants'
+import { setAttributesToDatadog } from 'utilities/src/logger/datadog/Datadog'
 import { getDatadogEnvironment } from 'utilities/src/logger/datadog/env'
 import { logger } from 'utilities/src/logger/logger'
 
@@ -34,11 +36,12 @@ const datadogAutoInstrumentation = {
   trackResources: datadogEnabledBuild,
 }
 
-async function initializeDatadog(sessionSamplingRate: number | undefined): Promise<void> {
-  const datadogConfig = {
+async function initializeDatadog(sessionSamplingRate: number): Promise<void> {
+  const datadogConfig: DatadogProviderConfiguration = {
     clientToken: config.datadogClientToken,
     env: getDatadogEnvironment(),
     applicationId: config.datadogProjectId,
+    // @ts-expect-error - Favored getting types from DatadogProviderConfiguration over fixing ths type
     trackingConsent: undefined,
     site: 'US1',
     longTaskThresholdMs: 100,
@@ -71,7 +74,19 @@ async function initializeDatadog(sessionSamplingRate: number | undefined): Promi
     })
   }
 
+  if (config.isE2ETest) {
+    Object.assign(datadogConfig, {
+      sessionSamplingRate: 100,
+      trackingConsent: TrackingConsent.GRANTED,
+      verbosity: SdkVerbosity.DEBUG,
+    })
+  }
+
   await DatadogProvider.initialize(datadogConfig)
+
+  setAttributesToDatadog({
+    isE2ETest: config.isE2ETest,
+  }).catch(() => undefined)
 }
 
 /**
@@ -83,12 +98,12 @@ export function DatadogProviderWrapper({
   sessionSampleRate,
 }: PropsWithChildren<{ sessionSampleRate: number | undefined }>): JSX.Element {
   useEffect(() => {
-    if (datadogEnabledBuild && sessionSampleRate !== undefined) {
+    if ((datadogEnabledBuild || config.isE2ETest) && sessionSampleRate !== undefined) {
       initializeDatadog(sessionSampleRate).catch(() => undefined)
     }
   }, [sessionSampleRate])
 
-  if (isE2EMode || isJestRun) {
+  if (isJestRun) {
     return <>{children}</>
   }
   logger.setDatadogEnabled(true)

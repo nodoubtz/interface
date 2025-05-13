@@ -5,17 +5,16 @@ import { Option } from 'components/WalletModal/Option'
 import PrivacyPolicyNotice from 'components/WalletModal/PrivacyPolicyNotice'
 import { useOrderedConnections } from 'components/WalletModal/useOrderedConnections'
 import { useRecentConnectorId } from 'components/Web3Provider/constants'
-import { useIsUniExtensionAvailable } from 'hooks/useUniswapWalletOptions'
 import { useAtom } from 'jotai'
+import React from 'react'
 import { Trans } from 'react-i18next'
 import { transitions } from 'theme/styles'
-import { Flex, Text } from 'ui/src'
+import { Flex, Separator, Text } from 'ui/src'
 import { BackArrow } from 'ui/src/components/icons/BackArrow'
 import { CONNECTION_PROVIDER_IDS } from 'uniswap/src/constants/web3'
 
 export function OtherWalletsModal() {
   const showMoonpayText = useShowMoonpayText()
-  const isUniExtensionAvailable = useIsUniExtensionAvailable()
   const [, setMenu] = useAtom(miniPortfolioMenuStateAtom)
   const connectors = useOrderedConnections({ showSecondaryConnectors: true })
   const recentConnectorId = useRecentConnectorId()
@@ -23,7 +22,7 @@ export function OtherWalletsModal() {
   return (
     <Flex
       backgroundColor="$surface1"
-      pt={isUniExtensionAvailable ? 16 : 14}
+      pt="$spacing16"
       px="$spacing16"
       pb="$spacing20"
       flex={1}
@@ -48,7 +47,6 @@ export function OtherWalletsModal() {
       <Flex gap="$gap16">
         <Flex row grow alignItems="flex-start">
           <Flex
-            gap={2}
             borderRadius="$rounded16"
             overflow="hidden"
             width="100%"
@@ -57,10 +55,16 @@ export function OtherWalletsModal() {
           >
             {/* If uniswap mobile was the last used connector it will be show on the primary window */}
             {recentConnectorId !== CONNECTION_PROVIDER_IDS.UNISWAP_WALLET_CONNECT_CONNECTOR_ID && (
-              <Option connectorId={CONNECTION_PROVIDER_IDS.UNISWAP_WALLET_CONNECT_CONNECTOR_ID} />
+              <>
+                <Option connectorId={CONNECTION_PROVIDER_IDS.UNISWAP_WALLET_CONNECT_CONNECTOR_ID} />
+                {connectors.length > 0 && <Separator />}
+              </>
             )}
-            {connectors.map((c) => (
-              <Option connectorId={c.id} key={c.uid} detected={c.isInjected} />
+            {connectors.map((c, index) => (
+              <React.Fragment key={c.uid + index}>
+                <Option connectorId={c.id} detected={c.isInjected} />
+                {index < connectors.length - 1 && <Separator />}
+              </React.Fragment>
             ))}
           </Flex>
         </Flex>

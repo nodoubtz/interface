@@ -1,3 +1,4 @@
+import { useFocusEffect } from '@react-navigation/core'
 import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { TouchableWithoutFeedback } from 'react-native'
@@ -8,8 +9,7 @@ import { SendHeader } from 'src/features/send/SendHeader'
 import { SendTokenForm } from 'src/features/send/SendTokenForm'
 import { SEND_CONTENT_RENDER_DELAY_MS } from 'src/features/send/constants'
 import { Flex, useSporeColors } from 'ui/src'
-import EyeIcon from 'ui/src/assets/icons/eye.svg'
-import { iconSizes } from 'ui/src/theme'
+import { Eye } from 'ui/src/components/icons'
 import { TokenSelectorModal, TokenSelectorVariation } from 'uniswap/src/components/TokenSelector/TokenSelector'
 import { TokenSelectorFlow } from 'uniswap/src/components/TokenSelector/types'
 import { Modal } from 'uniswap/src/components/modals/Modal'
@@ -20,11 +20,11 @@ import { ModalName } from 'uniswap/src/features/telemetry/constants'
 import {
   TransactionModalFooterContainer,
   TransactionModalInnerContainer,
-} from 'uniswap/src/features/transactions/TransactionModal/TransactionModal'
+} from 'uniswap/src/features/transactions/components/TransactionModal/TransactionModal'
 import {
   TransactionScreen,
   useTransactionModalContext,
-} from 'uniswap/src/features/transactions/TransactionModal/TransactionModalContext'
+} from 'uniswap/src/features/transactions/components/TransactionModal/TransactionModalContext'
 import { LowNativeBalanceModal } from 'uniswap/src/features/transactions/modals/LowNativeBalanceModal'
 import { CurrencyField } from 'uniswap/src/types/currency'
 import { createTransactionId } from 'uniswap/src/utils/createTransactionId'
@@ -141,7 +141,6 @@ function SendFormContent({
   showLowNetworkTokenWarning: boolean
   hideLowNetworkTokenWarning: () => void
 }): JSX.Element {
-  const colors = useSporeColors()
   const { t } = useTranslation()
 
   const goToReviewScreen = useGoToReviewScreen()
@@ -169,7 +168,7 @@ function SendFormContent({
       <WarningModal
         caption={t('send.warning.viewOnly.message')}
         acknowledgeText={t('common.button.dismiss')}
-        icon={<EyeIcon color={colors.neutral1.get()} height={iconSizes.icon24} width={iconSizes.icon24} />}
+        icon={<Eye color="$neutral1" size="$icon.24" />}
         isOpen={showViewOnlyModal}
         modalName={ModalName.SwapWarning}
         severity={WarningSeverity.Low}
@@ -198,6 +197,7 @@ function SendFormContent({
           currencyField={CurrencyField.INPUT}
           flow={TokenSelectorFlow.Send}
           variation={TokenSelectorVariation.BalancesOnly}
+          focusHook={useFocusEffect}
           onClose={onHideTokenSelector}
           onSelectCurrency={onSelectCurrency}
         />

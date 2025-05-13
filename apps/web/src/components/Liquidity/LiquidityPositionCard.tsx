@@ -12,12 +12,13 @@ import {
   MinMaxRange,
 } from 'components/Liquidity/LiquidityPositionFeeStats'
 import { LiquidityPositionInfo, LiquidityPositionInfoLoader } from 'components/Liquidity/LiquidityPositionInfo'
-import { useGetRangeDisplay, useV3OrV4PositionDerivedInfo } from 'components/Liquidity/hooks'
+import { useGetRangeDisplay, usePositionDerivedInfo } from 'components/Liquidity/hooks'
 import { PositionInfo, PriceOrdering } from 'components/Liquidity/types'
 import { MouseoverTooltip } from 'components/Tooltip'
 import useHoverProps from 'hooks/useHoverProps'
 import { useLpIncentivesFormattedEarnings } from 'hooks/useLpIncentivesFormattedEarnings'
 import { useSwitchChain } from 'hooks/useSwitchChain'
+import { getInvertedTuple } from 'pages/Pool/Positions/create/utils'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
@@ -34,19 +35,21 @@ import { Minus } from 'ui/src/components/icons/Minus'
 import { MoreHorizontal } from 'ui/src/components/icons/MoreHorizontal'
 import { Plus } from 'ui/src/components/icons/Plus'
 import { RightArrow } from 'ui/src/components/icons/RightArrow'
-import { iconSizes } from 'ui/src/theme'
 import { zIndexes } from 'ui/src/theme/zIndexes'
 import { MenuContent } from 'uniswap/src/components/menus/ContextMenuContent'
 import { ContextMenu, MenuOptionItem } from 'uniswap/src/components/menus/ContextMenuV2'
+import { ContextMenuTriggerMode } from 'uniswap/src/components/menus/types'
 import { getChainInfo } from 'uniswap/src/features/chains/chainInfo'
 import { FeatureFlags } from 'uniswap/src/features/gating/flags'
 import { useFeatureFlag } from 'uniswap/src/features/gating/hooks'
 import { useLocalizationContext } from 'uniswap/src/features/language/LocalizationContext'
 import { ModalName } from 'uniswap/src/features/telemetry/constants'
-import { useUSDCValue } from 'uniswap/src/features/transactions/hooks/useUSDCPrice'
+import { useCurrencyInfo } from 'uniswap/src/features/tokens/useCurrencyInfo'
 import { togglePositionVisibility } from 'uniswap/src/features/visibility/slice'
+import { buildCurrencyId, currencyAddress } from 'uniswap/src/utils/currencyId'
 import { getPoolDetailsURL } from 'uniswap/src/utils/linking'
 import { NumberType } from 'utilities/src/format/types'
+import { useBooleanState } from 'utilities/src/react/useBooleanState'
 import { isV4UnsupportedChain } from 'utils/networkSupportsV4'
 import { useAccount } from 'wagmi'
 
@@ -84,7 +87,6 @@ function useDropdownOptions(
   isVisible?: boolean,
 ): MenuOptionItem[] {
   const { t } = useTranslation()
-  const isMigrateToV4Enabled = useFeatureFlag(FeatureFlags.MigrateV3ToV4)
   const isOpenLiquidityPosition = liquidityPosition.status !== PositionStatus.CLOSED
 
   const dispatch = useAppDispatch()
@@ -182,7 +184,6 @@ function useDropdownOptions(
 
     const showMigrateV3Option =
       isOpenLiquidityPosition &&
-      isMigrateToV4Enabled &&
       !isV4UnsupportedChain(liquidityPosition.chainId) &&
       liquidityPosition.version !== ProtocolVersion.V4
 
@@ -207,7 +208,6 @@ function useDropdownOptions(
   }, [
     account.chainId,
     dispatch,
-    isMigrateToV4Enabled,
     isOpenLiquidityPosition,
     isVisible,
     liquidityPosition,
@@ -233,6 +233,8 @@ export function LiquidityPositionCard({
   isVisible?: boolean
   disabled?: boolean
 }) {
+  const { value: isOpenContextMenu, setTrue: openContextMenu, setFalse: closeContextMenu } = useBooleanState(false)
+
   const { formatCurrencyAmount } = useLocalizationContext()
   const isTouchDevice = useIsTouchDevice()
   const [pricesInverted, setPricesInverted] = useState(false)
@@ -243,36 +245,38 @@ export function LiquidityPositionCard({
   const isSmallScreen = media.sm
 
   const { fiatFeeValue0, fiatFeeValue1, fiatValue0, fiatValue1, priceOrdering, apr } =
-    useV3OrV4PositionDerivedInfo(liquidityPosition)
+    usePositionDerivedInfo(liquidityPosition)
 
-  const token0USDValue = useUSDCValue(liquidityPosition.currency0Amount)
-  const token1USDValue = useUSDCValue(liquidityPosition.currency1Amount)
+  const [baseCurrency, quoteCurrency] = getInvertedTuple(
+    [liquidityPosition.currency0Amount.currency, liquidityPosition.currency1Amount.currency],
+    pricesInverted,
+  )
 
-  const v3OrV4FormattedUsdValue =
+  const formattedUsdValue =
     fiatValue0 && fiatValue1
       ? formatCurrencyAmount({
           value: fiatValue0.add(fiatValue1),
           type: NumberType.FiatStandard,
         })
       : undefined
-  const v2FormattedUsdValue =
-    token0USDValue && token1USDValue
-      ? formatCurrencyAmount({ value: token0USDValue.add(token1USDValue), type: NumberType.FiatStandard })
-      : undefined
 
-  const v3OrV4FormattedFeesValue =
-    fiatFeeValue0 && fiatFeeValue1
-      ? formatCurrencyAmount({
-          value: fiatFeeValue0.add(fiatFeeValue1),
-          type: NumberType.FiatStandard,
-        })
-      : undefined
-
-  const { lpIncentivesFormattedEarnings } = useLpIncentivesFormattedEarnings({
+  const { totalFormattedEarnings, hasRewards, formattedFeesValue } = useLpIncentivesFormattedEarnings({
     liquidityPosition,
     fiatFeeValue0,
     fiatFeeValue1,
   })
+
+  const currency0Id =
+    liquidityPosition?.version === ProtocolVersion.V4
+      ? buildCurrencyId(liquidityPosition.chainId, currencyAddress(liquidityPosition.currency0Amount.currency))
+      : undefined
+  const currency1Id =
+    liquidityPosition?.version === ProtocolVersion.V4
+      ? buildCurrencyId(liquidityPosition.chainId, currencyAddress(liquidityPosition.currency1Amount.currency))
+      : undefined
+
+  const currency0Info = useCurrencyInfo(currency0Id)
+  const currency1Info = useCurrencyInfo(currency1Id)
 
   const dropdownOptions = useDropdownOptions(liquidityPosition, showVisibilityOption, isVisible)
 
@@ -287,25 +291,33 @@ export function LiquidityPositionCard({
       return {}
     }
     return {
-      base: pricesInverted ? liquidityPosition.position.amount1.currency : liquidityPosition.position.amount0.currency,
+      base: baseCurrency,
       priceLower: pricesInverted
-        ? liquidityPosition.position.token0PriceUpper
-        : liquidityPosition.position.token0PriceLower.invert(),
+        ? liquidityPosition.position.token0PriceUpper.invert()
+        : liquidityPosition.position.token0PriceLower,
       priceUpper: pricesInverted
-        ? liquidityPosition.position.token0PriceLower
-        : liquidityPosition.position.token0PriceUpper.invert(),
+        ? liquidityPosition.position.token0PriceLower.invert()
+        : liquidityPosition.position.token0PriceUpper,
     }
-  }, [liquidityPosition, pricesInverted])
+  }, [liquidityPosition, baseCurrency, pricesInverted])
 
   return (
-    <ContextMenu menuItems={dropdownOptions} alignContentLeft={isMiniVersion} disabled={disabled}>
+    <ContextMenu
+      menuItems={dropdownOptions}
+      isPlacementRight={!isMiniVersion}
+      disabled={disabled}
+      triggerMode={ContextMenuTriggerMode.Secondary}
+      isOpen={isOpenContextMenu}
+      openMenu={openContextMenu}
+      closeMenu={closeContextMenu}
+    >
       {isMiniVersion ? (
         <MiniPositionCard
           menuOptions={dropdownOptions}
           disabled={disabled}
           positionInfo={liquidityPosition}
-          formattedUsdValue={v3OrV4FormattedUsdValue ?? v2FormattedUsdValue}
-          formattedUsdFees={v3OrV4FormattedFeesValue}
+          formattedUsdValue={formattedUsdValue}
+          formattedUsdFees={formattedFeesValue}
           priceOrdering={priceOrdering}
           tickSpacing={liquidityPosition.tickSpacing}
           tickLower={liquidityPosition.tickLower}
@@ -329,6 +341,7 @@ export function LiquidityPositionCard({
             px="$spacing24"
             alignItems="center"
             justifyContent="space-between"
+            overflow="hidden"
             $md={{ row: false, alignItems: 'flex-start', gap: '$gap20' }}
           >
             <LiquidityPositionInfo
@@ -339,12 +352,8 @@ export function LiquidityPositionCard({
             <WrappedLiquidityPositionRangeChart
               version={liquidityPosition.version}
               chainId={liquidityPosition.chainId}
-              currency0={
-                pricesInverted ? liquidityPosition.currency1Amount.currency : liquidityPosition.currency0Amount.currency
-              }
-              currency1={
-                pricesInverted ? liquidityPosition.currency0Amount.currency : liquidityPosition.currency1Amount.currency
-              }
+              quoteCurrency={quoteCurrency}
+              baseCurrency={baseCurrency}
               positionStatus={liquidityPosition.status}
               poolAddressOrId={liquidityPosition.poolId}
               priceOrdering={priceOrderingForChart}
@@ -361,16 +370,17 @@ export function LiquidityPositionCard({
             </Flex>
           </Flex>
           <LiquidityPositionFeeStats
-            formattedUsdValue={v3OrV4FormattedUsdValue ?? v2FormattedUsdValue}
-            formattedUsdFees={v3OrV4FormattedFeesValue}
-            formattedLpIncentiveEarnings={lpIncentivesFormattedEarnings}
+            formattedUsdValue={formattedUsdValue}
+            formattedUsdFees={formattedFeesValue}
+            formattedLpIncentiveEarnings={totalFormattedEarnings}
+            hasRewards={hasRewards}
             priceOrdering={priceOrdering}
             tickSpacing={liquidityPosition.tickSpacing}
             tickLower={liquidityPosition.tickLower}
             tickUpper={liquidityPosition.tickUpper}
             version={liquidityPosition.version}
-            currency0Amount={liquidityPosition.currency0Amount}
-            currency1Amount={liquidityPosition.currency1Amount}
+            currency0Info={currency0Info}
+            currency1Info={currency1Info}
             apr={apr}
             cardHovered={hover && !disabled}
             pricesInverted={pricesInverted}
@@ -511,7 +521,7 @@ function PositionDropdownMoreMenu({ menuOptions }: { menuOptions: MenuOptionItem
       }}
     >
       <PositionDetailsMenuButton $group-hover={activeStyle} open={isOpen} onPress={() => {}}>
-        <MoreHorizontal size={iconSizes.icon16} color="white" />
+        <MoreHorizontal size="$icon.16" color="white" />
       </PositionDetailsMenuButton>
     </TouchableArea>
   )
@@ -533,7 +543,7 @@ function PositionDropdownMoreMenu({ menuOptions }: { menuOptions: MenuOptionItem
           borderWidth: 0,
         }}
       >
-        <MenuContent items={menuOptions} onItemClick={() => setIsOpen(false)} />
+        <MenuContent items={menuOptions} handleCloseMenu={() => setIsOpen(false)} />
       </AdaptiveDropdown>
     </Flex>
   )

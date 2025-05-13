@@ -14,8 +14,8 @@ import { handleOnRampReturnLink } from 'src/features/deepLinking/handleOnRampRet
 import { handleSwapLink } from 'src/features/deepLinking/handleSwapLinkSaga'
 import { handleTransactionLink } from 'src/features/deepLinking/handleTransactionLinkSaga'
 import { closeAllModals, openModal } from 'src/features/modals/modalSlice'
-import { waitForWcWeb3WalletIsReady } from 'src/features/walletConnect/saga'
 import { pairWithWalletConnectURI } from 'src/features/walletConnect/utils'
+import { waitForWcWeb3WalletIsReady } from 'src/features/walletConnect/walletConnectClient'
 import { addRequest, setDidOpenFromDeepLink } from 'src/features/walletConnect/walletConnectSlice'
 import { call, put, select, takeLatest } from 'typed-redux-saga'
 import { fromUniswapWebAppLink } from 'uniswap/src/features/chains/utils'
@@ -75,19 +75,11 @@ export function* handleUniswapAppDeepLink(path: string, url: string, linkSource:
     if (!contractAddress || !tokenId) {
       return
     }
-    yield* put(
-      openModal({
-        name: ModalName.Explore,
-        initialState: {
-          screen: MobileScreens.NFTItem,
-          params: {
-            address: contractAddress,
-            tokenId,
-            isSpam: false,
-          },
-        },
-      }),
-    )
+    yield* call(navigate, MobileScreens.NFTItem, {
+      address: contractAddress,
+      tokenId,
+      isSpam: false,
+    })
     yield* call(sendAnalyticsEvent, MobileEventName.ShareLinkOpened, {
       entity: ShareableEntity.NftItem,
       url,
@@ -101,17 +93,9 @@ export function* handleUniswapAppDeepLink(path: string, url: string, linkSource:
     if (!contractAddress) {
       return
     }
-    yield* put(
-      openModal({
-        name: ModalName.Explore,
-        initialState: {
-          screen: MobileScreens.NFTCollection,
-          params: {
-            collectionAddress: contractAddress,
-          },
-        },
-      }),
-    )
+    yield* call(navigate, MobileScreens.NFTCollection, {
+      collectionAddress: contractAddress,
+    })
     yield* call(sendAnalyticsEvent, MobileEventName.ShareLinkOpened, {
       entity: ShareableEntity.NftCollection,
       url,
@@ -123,6 +107,7 @@ export function* handleUniswapAppDeepLink(path: string, url: string, linkSource:
   if (TOKEN_SHARE_LINK_HASH_REGEX.test(path)) {
     const [, , network, contractAddress] = path.match(TOKEN_SHARE_LINK_HASH_REGEX) || []
     const chainId = network && fromUniswapWebAppLink(network)
+
     if (!chainId || !contractAddress) {
       return
     }
@@ -130,17 +115,9 @@ export function* handleUniswapAppDeepLink(path: string, url: string, linkSource:
       contractAddress === BACKEND_NATIVE_CHAIN_ADDRESS_STRING
         ? buildNativeCurrencyId(chainId)
         : buildCurrencyId(chainId, contractAddress)
-    yield* put(
-      openModal({
-        name: ModalName.Explore,
-        initialState: {
-          screen: MobileScreens.TokenDetails,
-          params: {
-            currencyId,
-          },
-        },
-      }),
-    )
+    yield* call(navigate, MobileScreens.TokenDetails, {
+      currencyId,
+    })
     if (linkSource === LinkSource.Share) {
       yield* call(sendAnalyticsEvent, MobileEventName.ShareLinkOpened, {
         entity: ShareableEntity.Token,
@@ -171,17 +148,9 @@ export function* handleUniswapAppDeepLink(path: string, url: string, linkSource:
     if (isInternal) {
       yield* put(setAccountAsActive(accountAddress))
     } else {
-      yield* put(
-        openModal({
-          name: ModalName.Explore,
-          initialState: {
-            screen: MobileScreens.ExternalProfile,
-            params: {
-              address: accountAddress,
-            },
-          },
-        }),
-      )
+      yield* call(navigate, MobileScreens.ExternalProfile, {
+        address: accountAddress,
+      })
     }
     yield* call(sendAnalyticsEvent, MobileEventName.ShareLinkOpened, {
       entity: ShareableEntity.Wallet,

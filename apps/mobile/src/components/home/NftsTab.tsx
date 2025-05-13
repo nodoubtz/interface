@@ -51,7 +51,7 @@ export const NftsTab = memo(
         }
 
         return (
-          <Flex fill m="$spacing4">
+          <Flex m="$spacing4">
             <NftViewWithContextMenu index={index} item={item} owner={owner} onPress={onPressNft} />
           </Flex>
         )

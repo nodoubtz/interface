@@ -69,8 +69,8 @@ function scaleToInteger(a: number, precision = 18) {
  */
 export function ActiveLiquidityChart({
   id = 'ActiveLiquidityChart2',
-  currency0,
-  currency1,
+  quoteCurrency,
+  baseCurrency,
   data: { series, current, min, max },
   dimensions: { width, height, contentWidth, axisLabelPaneWidth },
   brushDomain,
@@ -83,8 +83,8 @@ export function ActiveLiquidityChart({
   barColor,
 }: {
   id?: string
-  currency0: Currency
-  currency1: Currency
+  quoteCurrency: Currency
+  baseCurrency: Currency
   data: {
     series: ChartEntry[]
     current: number
@@ -149,14 +149,15 @@ export function ActiveLiquidityChart({
     <>
       {hoverY && hoveredTick ? (
         <TickTooltip
+          containerHeight={height}
           hoverY={hoverY}
           hoveredTick={hoveredTick}
           currentTick={currentTick}
           currentPrice={current}
           contentWidth={contentWidth}
           axisLabelPaneWidth={axisLabelPaneWidth}
-          currency0={currency0}
-          currency1={currency1}
+          quoteCurrency={quoteCurrency}
+          baseCurrency={baseCurrency}
         />
       ) : null}
       {showDiffIndicators && (
@@ -265,7 +266,7 @@ export function ActiveLiquidityChart({
               />
             )}
 
-            {hoverY && (
+            {hoverY && hoveredTick && Number(hoveredTick.amount0Locked) + Number(hoveredTick.amount1Locked) > 0 && (
               <HorizontalLine
                 value={yScale.invert(hoverY)}
                 yScale={yScale}

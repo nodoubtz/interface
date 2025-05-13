@@ -33,7 +33,7 @@ import {
 } from 'src/components/layout/TabHelpers'
 import { selectSomeModalOpen } from 'src/features/modals/selectSomeModalOpen'
 import { useHideSplashScreen } from 'src/features/splashScreen/useHideSplashScreen'
-import { useWalletRestore } from 'src/features/wallet/hooks'
+import { useWalletRestore } from 'src/features/wallet/useWalletRestore'
 import { HomeScreenQuickActions } from 'src/screens/HomeScreen/HomeScreenQuickActions'
 import { HomeScreenTabIndex } from 'src/screens/HomeScreen/HomeScreenTabIndex'
 import { useHomeScreenState } from 'src/screens/HomeScreen/useHomeScreenState'
@@ -389,7 +389,7 @@ export function HomeScreen(props?: AppStackScreenProp<MobileScreens.Home>): JSX.
       switch (route?.key) {
         case SectionName.HomeTokensTab:
           return (
-            <Freeze freeze={tabIndex !== 0 && isHomeScreenBlur}>
+            <Freeze freeze={tabIndex !== HomeScreenTabIndex.Tokens && isHomeScreenBlur}>
               {isLayoutReady && (
                 <Animated.View entering={FadeIn}>
                   <TokensTab
@@ -408,7 +408,7 @@ export function HomeScreen(props?: AppStackScreenProp<MobileScreens.Home>): JSX.
           )
         case SectionName.HomeNFTsTab:
           return (
-            <Freeze freeze={tabIndex !== 1 && isHomeScreenBlur}>
+            <Freeze freeze={tabIndex !== HomeScreenTabIndex.NFTs && isHomeScreenBlur}>
               <NftsTab
                 ref={nftsTabScrollRef}
                 containerProps={sharedProps}
@@ -417,13 +417,14 @@ export function HomeScreen(props?: AppStackScreenProp<MobileScreens.Home>): JSX.
                 refreshing={refreshing}
                 scrollHandler={nftsTabScrollHandler}
                 testID={TestID.NFTsTab}
+                isActiveTab={tabIndex === HomeScreenTabIndex.NFTs && !isHomeScreenBlur}
                 onRefresh={onRefreshHomeData}
               />
             </Freeze>
           )
         case SectionName.HomeActivityTab:
           return (
-            <Freeze freeze={tabIndex !== 2 && isHomeScreenBlur}>
+            <Freeze freeze={tabIndex !== HomeScreenTabIndex.Activity && isHomeScreenBlur}>
               <ActivityTab
                 ref={activityTabScrollRef}
                 containerProps={sharedProps}

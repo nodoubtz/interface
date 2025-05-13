@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef } from 'react'
+import { useUniswapContextSelector } from 'uniswap/src/contexts/UniswapContext'
 import { useTradingApiSwapQuery } from 'uniswap/src/data/apiClients/tradingApi/useTradingApiSwapQuery'
 import { AccountMeta } from 'uniswap/src/features/accounts/types'
 import { useActiveGasStrategy, useShadowGasStrategies, useTransactionGasFee } from 'uniswap/src/features/gas/hooks'
 import { DynamicConfigs, SwapConfigKey } from 'uniswap/src/features/gating/configs'
 import { useDynamicConfigValue } from 'uniswap/src/features/gating/hooks'
-import { useLocalizationContext } from 'uniswap/src/features/language/LocalizationContext'
 import { useTransactionSettingsContext } from 'uniswap/src/features/transactions/settings/contexts/TransactionSettingsContext'
 import { usePermit2SignatureWithData } from 'uniswap/src/features/transactions/swap/contexts/hooks/usePermit2Signature'
 import { useWrapTransactionRequest } from 'uniswap/src/features/transactions/swap/contexts/hooks/useWrapTransactionRequest'
@@ -27,7 +27,6 @@ import {
 import { DerivedSwapInfo } from 'uniswap/src/features/transactions/swap/types/derivedSwapInfo'
 import { ApprovalAction, TokenApprovalInfo } from 'uniswap/src/features/transactions/swap/types/trade'
 import { isUniswapX } from 'uniswap/src/features/transactions/swap/utils/routing'
-import { isE2EMode } from 'utilities/src/environment/constants'
 import { isInterface } from 'utilities/src/platform'
 import { useTrace } from 'utilities/src/telemetry/trace/TraceContext'
 import { ONE_SECOND_MS } from 'utilities/src/time/time'
@@ -78,7 +77,6 @@ export function useSwapTransactionRequestInfo({
   derivedSwapInfo: DerivedSwapInfo
   tokenApprovalInfo: TokenApprovalInfo | undefined
 }): TransactionRequestInfo {
-  const formatter = useLocalizationContext()
   const trace = useTrace()
   const activeGasStrategy = useActiveGasStrategy(derivedSwapInfo.chainId, 'general')
   const shadowGasStrategies = useShadowGasStrategies(derivedSwapInfo.chainId, 'general')
@@ -102,11 +100,13 @@ export function useSwapTransactionRequestInfo({
       return undefined
     }
 
+    const alreadyApproved = tokenApprovalInfo?.action === ApprovalAction.None && !swapQuoteResponse.permitTransaction
+
     return prepareSwapRequestParams({
       swapQuoteResponse,
       signature: signatureInfo.signature,
       transactionSettings,
-      alreadyApproved: tokenApprovalInfo?.action === ApprovalAction.None,
+      alreadyApproved,
     })
   }, [
     prepareSwapRequestParams,
@@ -116,10 +116,16 @@ export function useSwapTransactionRequestInfo({
     tokenApprovalInfo?.action,
   ])
 
+  const canBatchTransactions = useUniswapContextSelector((ctx) =>
+    ctx.getCanBatchTransactions?.(derivedSwapInfo.chainId),
+  )
+
+  const permitsDontNeedSignature = !!canBatchTransactions
   const shouldSkipSwapRequest = getShouldSkipSwapRequest({
     derivedSwapInfo,
     tokenApprovalInfo,
     signature: signatureInfo.signature,
+    permitsDontNeedSignature,
   })
 
   const tradingApiSwapRequestMs = useDynamicConfigValue(
@@ -132,14 +138,16 @@ export function useSwapTransactionRequestInfo({
     data,
     error,
     isLoading: isSwapLoading,
-  } = useTradingApiSwapQuery({
-    params: shouldSkipSwapRequest ? undefined : swapRequestParams,
-    // Disable polling during e2e testing because it was preventing js thread from going idle
-    refetchInterval: isE2EMode ? undefined : tradingApiSwapRequestMs,
-    staleTime: tradingApiSwapRequestMs,
-    // We add a small buffer in case connection is too slow
-    immediateGcTime: tradingApiSwapRequestMs + ONE_SECOND_MS * 5,
-  })
+  } = useTradingApiSwapQuery(
+    {
+      params: shouldSkipSwapRequest ? undefined : swapRequestParams,
+      refetchInterval: tradingApiSwapRequestMs,
+      staleTime: tradingApiSwapRequestMs,
+      // We add a small buffer in case connection is too slow
+      immediateGcTime: tradingApiSwapRequestMs + ONE_SECOND_MS * 5,
+    },
+    { canBatchTransactions },
+  )
 
   const processSwapResponse = useMemo(() => createProcessSwapResponse({ activeGasStrategy }), [activeGasStrategy])
 
@@ -150,33 +158,32 @@ export function useSwapTransactionRequestInfo({
         error,
         swapQuote,
         isSwapLoading,
-        signature: signatureInfo.signature,
         permitData,
-        permitDataLoading: signatureInfo.isLoading,
         swapRequestParams,
         isRevokeNeeded: tokenApprovalInfo?.action === ApprovalAction.RevokeAndPermit2Approve,
+        permitsDontNeedSignature,
       }),
     [
       data,
       error,
       isSwapLoading,
-      signatureInfo.signature,
-      signatureInfo.isLoading,
       permitData,
       swapQuote,
       swapRequestParams,
       processSwapResponse,
       tokenApprovalInfo?.action,
+      permitsDontNeedSignature,
     ],
   )
 
   // Only log analytics events once per request
   const previousRequestIdRef = useRef(swapQuoteResponse?.requestId)
-  const logSwapRequestErrors = useMemo(() => createLogSwapRequestErrors({ trace, formatter }), [trace, formatter])
+  const logSwapRequestErrors = useMemo(() => createLogSwapRequestErrors({ trace }), [trace])
 
   useEffect(() => {
     logSwapRequestErrors({
-      result,
+      txRequest: result.txRequests?.[0],
+      gasFeeResult: result.gasFeeResult,
       derivedSwapInfo,
       transactionSettings,
       previousRequestId: previousRequestIdRef.current,
@@ -201,19 +208,14 @@ function useUniswapXTransactionRequestInfo({
 
   const permitData = derivedSwapInfo.trade.trade?.quote?.permitData
 
-  // On interface, we do not fetch signature until after swap is clicked, as it requires user interaction.
-  const signatureInfo = usePermit2SignatureWithData({ permitData, skip: isInterface })
-
   return useMemo(
     () =>
       processUniswapXResponse({
         wrapTransactionRequestInfo,
-        permitSignature: signatureInfo.signature,
-        permitDataLoading: signatureInfo.isLoading,
         permitData,
         needsWrap: isWrapApplicable,
       }),
-    [wrapTransactionRequestInfo, signatureInfo.signature, signatureInfo.isLoading, permitData, isWrapApplicable],
+    [wrapTransactionRequestInfo, permitData, isWrapApplicable],
   )
 }
 
