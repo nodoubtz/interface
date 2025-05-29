@@ -9,8 +9,7 @@ import { PageType, useIsPage } from 'hooks/useIsPage'
 import { BuyForm } from 'pages/Swap/Buy/BuyForm'
 import { LimitFormWrapper } from 'pages/Swap/Limit/LimitForm'
 import { SendForm } from 'pages/Swap/Send/SendForm'
-import { useResetOverrideOneClickSwapFlag } from 'pages/Swap/settings/OneClickSwap'
-import { useWebSwapSettings } from 'pages/Swap/settings/useWebSwapSettings'
+import { DeadlineOverride } from 'pages/Swap/settings/DeadlineOverride'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
@@ -33,12 +32,14 @@ import Trace from 'uniswap/src/features/telemetry/Trace'
 import { InterfaceEventNameLocal } from 'uniswap/src/features/telemetry/constants'
 import { sendAnalyticsEvent } from 'uniswap/src/features/telemetry/send'
 import { SwapRedirectFn } from 'uniswap/src/features/transactions/components/TransactionModal/TransactionModalContext'
-import { TransactionSettingsContextProvider } from 'uniswap/src/features/transactions/settings/contexts/TransactionSettingsContext'
-import { TransactionSettingKey } from 'uniswap/src/features/transactions/settings/slice'
+import { TransactionSettingsContextProvider } from 'uniswap/src/features/transactions/components/settings/contexts/TransactionSettingsContext'
+import { TransactionSettingKey } from 'uniswap/src/features/transactions/components/settings/slice'
 import { SwapFlow } from 'uniswap/src/features/transactions/swap/SwapFlow'
 import { SwapDependenciesContextProvider } from 'uniswap/src/features/transactions/swap/contexts/SwapDependenciesContextProvider'
 import { SwapFormContextProvider, SwapFormState } from 'uniswap/src/features/transactions/swap/contexts/SwapFormContext'
 import { selectFilteredChainIds } from 'uniswap/src/features/transactions/swap/contexts/selectors'
+import { TradeRoutingPreference } from 'uniswap/src/features/transactions/swap/form/header/SwapFormSettings/settingsConfigurations/TradeRoutingPreference/TradeRoutingPreference'
+import { Slippage } from 'uniswap/src/features/transactions/swap/form/header/SwapFormSettings/settingsConfigurations/slippage/Slippage/Slippage'
 import { useSwapPrefilledState } from 'uniswap/src/features/transactions/swap/form/hooks/useSwapPrefilledState'
 import { currencyToAsset } from 'uniswap/src/features/transactions/swap/utils/asset'
 import { CurrencyField } from 'uniswap/src/types/currency'
@@ -253,9 +254,6 @@ function UniversalSwapFlow({
     }))
   }, [t, currentTab])
 
-  const swapSettings = useWebSwapSettings()
-  const resetDisableOneClickSwap = useResetOverrideOneClickSwapFlag()
-
   return (
     <Flex>
       {!hideHeader && (
@@ -274,7 +272,7 @@ function UniversalSwapFlow({
         <Flex gap="$spacing16">
           <SwapDependenciesContextProvider swapCallback={swapCallback} wrapCallback={wrapCallback}>
             <SwapFlow
-              settings={swapSettings}
+              settings={[Slippage, DeadlineOverride, TradeRoutingPreference]}
               hideHeader={hideHeader}
               hideFooter={hideFooter}
               onClose={noop}
@@ -282,7 +280,6 @@ function UniversalSwapFlow({
               onCurrencyChange={onCurrencyChange}
               prefilledState={prefilledState}
               tokenColor={tokenColor}
-              onSubmitSwap={resetDisableOneClickSwap}
             />
           </SwapDependenciesContextProvider>
           <SwapBottomCard />

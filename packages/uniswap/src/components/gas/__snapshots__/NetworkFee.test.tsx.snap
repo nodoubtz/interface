@@ -67,8 +67,8 @@ exports[`NetworkFee renders a NetworkFee in a loading state 1`] = `
       </Text>
       <RNSVGSvgView
         align="xMidYMid"
-        bbHeight={16}
-        bbWidth={16}
+        bbHeight={12}
+        bbWidth={12}
         fill="none"
         focusable={false}
         meetOrSlice={0}
@@ -83,13 +83,13 @@ exports[`NetworkFee renders a NetworkFee in a loading state 1`] = `
             },
             {
               "color": "rgba(255, 255, 255, 0.38)",
-              "height": 16,
-              "width": 16,
+              "height": 12,
+              "width": 12,
             },
             {
               "flex": 0,
-              "height": 16,
-              "width": 16,
+              "height": 12,
+              "width": 12,
             },
           ]
         }
@@ -218,8 +218,8 @@ exports[`NetworkFee renders a NetworkFee in an error state 1`] = `
       </Text>
       <RNSVGSvgView
         align="xMidYMid"
-        bbHeight={16}
-        bbWidth={16}
+        bbHeight={12}
+        bbWidth={12}
         fill="none"
         focusable={false}
         meetOrSlice={0}
@@ -234,13 +234,13 @@ exports[`NetworkFee renders a NetworkFee in an error state 1`] = `
             },
             {
               "color": "rgba(255, 255, 255, 0.38)",
-              "height": 16,
-              "width": 16,
+              "height": 12,
+              "width": 12,
             },
             {
               "flex": 0,
-              "height": 16,
-              "width": 16,
+              "height": 12,
+              "width": 12,
             },
           ]
         }
@@ -398,8 +398,8 @@ exports[`NetworkFee renders a NetworkFee normally 1`] = `
       </Text>
       <RNSVGSvgView
         align="xMidYMid"
-        bbHeight={16}
-        bbWidth={16}
+        bbHeight={12}
+        bbWidth={12}
         fill="none"
         focusable={false}
         meetOrSlice={0}
@@ -414,13 +414,13 @@ exports[`NetworkFee renders a NetworkFee normally 1`] = `
             },
             {
               "color": "rgba(255, 255, 255, 0.38)",
-              "height": 16,
-              "width": 16,
+              "height": 12,
+              "width": 12,
             },
             {
               "flex": 0,
-              "height": 16,
-              "width": 16,
+              "height": 12,
+              "width": 12,
             },
           ]
         }

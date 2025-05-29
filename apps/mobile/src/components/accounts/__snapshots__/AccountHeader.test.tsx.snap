@@ -44,6 +44,7 @@ exports[`AccountHeader renders correctly 1`] = `
         }
       >
         <View
+          dd-action-name="account-header-avatar"
           hitSlop={20}
           onBlur={[Function]}
           onClick={[Function]}
@@ -356,6 +357,7 @@ exports[`AccountHeader renders correctly 1`] = `
         }
       >
         <View
+          dd-action-name="Scan"
           hitSlop={
             {
               "bottom": 5,

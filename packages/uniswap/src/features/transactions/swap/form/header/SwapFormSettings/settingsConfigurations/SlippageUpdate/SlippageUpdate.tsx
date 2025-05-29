@@ -1,9 +1,8 @@
-import type { SwapSettingConfig } from 'uniswap/src/features/transactions/swap/form/header/SwapFormSettings/settingsConfigurations/types'
+import type { TransactionSettingConfig } from 'uniswap/src/features/transactions/components/settings/types'
 import { PlatformSplitStubError } from 'utilities/src/errors'
 
-export const SlippageUpdate: SwapSettingConfig = {
+export const SlippageUpdate: TransactionSettingConfig = {
   renderTitle: (t) => t('swap.slippage.settings.title'),
-  renderCloseButtonText: (t) => t('common.button.save'),
   Control() {
     throw new PlatformSplitStubError('Slippage')
   },

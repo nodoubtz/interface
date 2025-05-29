@@ -553,6 +553,7 @@ export type UniverseEventProperties = {
   [InterfaceEventNameLocal.CollectLiquidityFailed]: {
     message: string
   }
+  [InterfaceEventNameLocal.EmbeddedWalletCreated]: undefined
   [InterfaceEventName.NAVBAR_SEARCH_EXITED]: {
     navbar_search_input_text: string
     hasInput: boolean
@@ -590,11 +591,6 @@ export type UniverseEventProperties = {
   }
   [InterfaceEventNameLocal.LimitedWalletSupportToastLearnMoreButtonClicked]: {
     chainId?: number
-  }
-  [InterfaceEventNameLocal.DelegationDetected]: {
-    chainId: number
-    delegationAddress: string
-    isActiveChain?: boolean
   }
   [InterfaceEventNameLocal.WalletCapabilitiesDetected]: {
     chainId: number
@@ -857,6 +853,15 @@ export type UniverseEventProperties = {
     output?: Currency
   }
   [SwapEventName.SWAP_TOKENS_REVERSED]: undefined
+  [UniswapEventName.TooltipOpened]: ITraceContext & {
+    tooltip_name: string
+    is_price_ux_enabled: boolean
+  }
+  [UniswapEventName.DelegationDetected]: {
+    chainId: number
+    delegationAddress: string
+    isActiveChain?: boolean
+  }
   [UniswapEventName.BalancesReport]: {
     total_balances_usd: number
     wallets: string[]
@@ -944,6 +949,7 @@ export type UniverseEventProperties = {
   }
   [WalletEventName.GasEstimateAccuracy]: GasEstimateAccuracyProperties
   [WalletEventName.KeyringMissingMnemonic]: KeyringMissingMnemonicProperties
+  [WalletEventName.MismatchAccountSignatureRequestBlocked]: undefined
   [WalletEventName.PendingTransactionTimeout]: PendingTransactionTimeoutProperties
   [WalletEventName.TokenVisibilityChanged]: { currencyId: string; visible: boolean }
   [WalletEventName.TransferSubmitted]: TransferProperties

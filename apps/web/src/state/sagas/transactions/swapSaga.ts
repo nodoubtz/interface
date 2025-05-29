@@ -9,7 +9,6 @@ import { formatSwapSignedAnalyticsEventProperties } from 'lib/utils/analytics'
 import { useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { handleAtomicSendCalls } from 'state/sagas/transactions/5792'
-import { useGetOnPressRetry } from 'state/sagas/transactions/retry'
 import { handleUniswapXSignatureStep } from 'state/sagas/transactions/uniswapx'
 import {
   HandleOnChainStepParams,
@@ -29,6 +28,7 @@ import { Routing } from 'uniswap/src/data/tradingApi/__generated__/index'
 import { SignerMnemonicAccountMeta } from 'uniswap/src/features/accounts/types'
 import { useLocalizationContext } from 'uniswap/src/features/language/LocalizationContext'
 import { sendAnalyticsEvent } from 'uniswap/src/features/telemetry/send'
+import { SwapTradeBaseProperties } from 'uniswap/src/features/telemetry/types'
 import { selectSwapStartTimestamp } from 'uniswap/src/features/timing/selectors'
 import { updateSwapStartTimestamp } from 'uniswap/src/features/timing/slice'
 import {
@@ -71,14 +71,14 @@ interface HandleSwapStepParams extends Omit<HandleOnChainStepParams, 'step' | 'i
   step: SwapTransactionStep | SwapTransactionStepAsync
   signature?: string
   trade: ClassicTrade | BridgeTrade
-  analytics: ReturnType<typeof getBaseTradeAnalyticsProperties>
+  analytics: SwapTradeBaseProperties
 }
 
 interface HandleSwapStepParams extends Omit<HandleOnChainStepParams, 'step' | 'info'> {
   step: SwapTransactionStep | SwapTransactionStepAsync
   signature?: string
   trade: ClassicTrade | BridgeTrade
-  analytics: ReturnType<typeof getBaseTradeAnalyticsProperties>
+  analytics: SwapTradeBaseProperties
 }
 function* handleSwapTransactionStep(params: HandleSwapStepParams) {
   const { trade, step, signature, analytics } = params
@@ -116,7 +116,7 @@ function* handleSwapTransactionStep(params: HandleSwapStepParams) {
 interface HandleSwapBatchedStepParams extends Omit<HandleOnChainStepParams, 'step' | 'info'> {
   step: SwapTransactionStepBatched
   trade: ClassicTrade | BridgeTrade
-  analytics: ReturnType<typeof getBaseTradeAnalyticsProperties>
+  analytics: SwapTradeBaseProperties
 }
 function* handleSwapTransactionBatchedStep(params: HandleSwapBatchedStepParams) {
   const { trade, step } = params
@@ -139,7 +139,7 @@ function* handleSwapTransactionBatchedStep(params: HandleSwapBatchedStepParams) 
 
 function handleSwapTransactionAnalytics(params: {
   trade: ClassicTrade | BridgeTrade
-  analytics: ReturnType<typeof getBaseTradeAnalyticsProperties>
+  analytics: SwapTradeBaseProperties
   hash?: string
   batchId?: string
 }) {
@@ -184,13 +184,12 @@ type SwapParams = {
   selectChain: (chainId: number) => Promise<boolean>
   startChainId?: number
   account: SignerMnemonicAccountMeta
-  analytics: ReturnType<typeof getBaseTradeAnalyticsProperties>
+  analytics: SwapTradeBaseProperties
   swapTxContext: ValidatedSwapTxContext
   setCurrentStep: SetCurrentStepFn
   setSteps: (steps: TransactionStep[]) => void
-  getOnPressRetry: (error: Error | undefined) => (() => void) | undefined
   onSuccess: () => void
-  onFailure: (error?: Error, onPressRetry?: () => void) => void
+  onFailure: (error?: Error) => void
   v4Enabled: boolean
 }
 
@@ -279,8 +278,7 @@ function* classicSwap(
       if (displayableError) {
         logger.error(displayableError, { tags: { file: 'swapSaga', function: 'classicSwap' } })
       }
-      const onPressRetry = params.getOnPressRetry(displayableError)
-      onFailure(displayableError, onPressRetry)
+      onFailure(displayableError)
       return
     }
   }
@@ -292,7 +290,7 @@ function* uniswapXSwap(
   params: SwapParams & {
     swapTxContext: ValidatedUniswapXSwapTxAndGasInfo
     steps: TransactionStep[]
-    analytics: ReturnType<typeof getBaseTradeAnalyticsProperties>
+    analytics: SwapTradeBaseProperties
   },
 ) {
   const {
@@ -366,13 +364,12 @@ export function useSwapCallback(): SwapCallback {
   const formatter = useLocalizationContext()
   const swapStartTimestamp = useSelector(selectSwapStartTimestamp)
   const selectChain = useSelectChain()
-  const startChainId = useAccount().chainId
+  const connectedAccount = useAccount()
+  const startChainId = connectedAccount.chainId
   const v4SwapEnabled = useV4SwapEnabled(startChainId)
   const trace = useTrace()
 
   const portfolioBalanceUsd = useTotalBalancesUsdForAnalytics()
-
-  const getOnPressRetry = useGetOnPressRetry()
 
   return useCallback(
     (args: SwapCallbackParams) => {
@@ -408,11 +405,11 @@ export function useSwapCallback(): SwapCallback {
         isBatched,
         includedPermitTransactionStep,
       })
+
       const swapParams = {
         swapTxContext,
         account,
         analytics,
-        getOnPressRetry,
         onSuccess,
         onFailure,
         setCurrentStep,
@@ -439,16 +436,6 @@ export function useSwapCallback(): SwapCallback {
       // Reset swap start timestamp now that the swap has been submitted
       appDispatch(updateSwapStartTimestamp({ timestamp: undefined }))
     },
-    [
-      formatter,
-      portfolioBalanceUsd,
-      trace,
-      selectChain,
-      startChainId,
-      v4SwapEnabled,
-      appDispatch,
-      swapStartTimestamp,
-      getOnPressRetry,
-    ],
+    [formatter, portfolioBalanceUsd, trace, selectChain, startChainId, v4SwapEnabled, appDispatch, swapStartTimestamp],
   )
 }

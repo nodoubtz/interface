@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import { ScreenHeader } from 'src/app/components/layout/ScreenHeader'
 import { SCREEN_ITEM_HORIZONTAL_PAD } from 'src/app/constants'
 import { SettingsItemWithDropdown } from 'src/app/features/settings/SettingsItemWithDropdown'
+import ThemeToggle from 'src/app/features/settings/ThemeToggle'
 import { AppRoutes, SettingsRoutes } from 'src/app/navigation/constants'
 import { useExtensionNavigation } from 'src/app/navigation/utils'
 import { getIsDefaultProviderFromStorage, setIsDefaultProviderToStorage } from 'src/app/utils/provider'
@@ -196,6 +197,7 @@ export function SettingsScreen(): JSX.Element {
                 />
               )}
             </>
+            <ThemeToggle />
             <SettingsItemWithDropdown
               Icon={Coins}
               items={ORDERED_CURRENCIES.map((currency) => {

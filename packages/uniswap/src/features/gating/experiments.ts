@@ -7,6 +7,7 @@ export enum Experiments {
   AccountCTAs = 'signin_login_connect_ctas',
   SwapPresets = 'swap_presets',
   NativeTokenPercentageBuffer = 'lp_native_eth_buffer',
+  PriceUxUpdate = 'price_ux_update',
   PrivateRpc = 'private_rpc',
 }
 
@@ -38,6 +39,10 @@ export enum SwapPresetsProperties {
   OutputEnabled = 'outputEnabled',
 }
 
+export enum PriceUxUpdateProperties {
+  UpdatedPriceUX = 'updatedPriceUX',
+}
+
 export enum PrivateRpcProperties {
   FlashbotsEnabled = 'flashbots_enabled',
   RefundPercent = 'refund_percent',
@@ -45,10 +50,11 @@ export enum PrivateRpcProperties {
 
 export type ExperimentProperties = {
   [Experiments.SwapPresets]: SwapPresetsProperties
+  [Experiments.PriceUxUpdate]: PriceUxUpdateProperties
   [Experiments.PrivateRpc]: PrivateRpcProperties
 }
 
 // will be a spread of all experiment properties in that layer
 export const LayerProperties: Record<Layers, string[]> = {
-  [Layers.SwapPage]: Object.values(SwapPresetsProperties),
+  [Layers.SwapPage]: Object.values({ ...SwapPresetsProperties, ...PriceUxUpdateProperties }),
 }

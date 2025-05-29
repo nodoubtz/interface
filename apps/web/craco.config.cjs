@@ -310,7 +310,9 @@ module.exports = {
               usedExports: true,
               sideEffects: true,
               // Optimize over all chunks, instead of async chunks (the default), so that initial chunks are also included.
-              splitChunks: { chunks: 'all' },
+              splitChunks: { 
+                chunks: 'all', 
+               },
             }
           : {}
       )

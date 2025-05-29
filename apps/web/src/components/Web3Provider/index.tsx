@@ -1,8 +1,7 @@
 import { Web3Provider as EthersWeb3Provider, ExternalProvider } from '@ethersproject/providers'
-import { QueryClientProvider } from '@tanstack/react-query'
 import { CustomUserProperties, InterfaceEventName, WalletConnectionResult } from '@uniswap/analytics-events'
 import { UNISWAP_EXTENSION_CONNECTOR_NAME, recentConnectorIdAtom } from 'components/Web3Provider/constants'
-import { queryClient, wagmiConfig } from 'components/Web3Provider/wagmiConfig'
+import { wagmiConfig } from 'components/Web3Provider/wagmiConfig'
 import { walletTypeToAmplitudeWalletType } from 'components/Web3Provider/walletConnect'
 import { RPC_PROVIDERS } from 'constants/providers'
 import { useAccount } from 'hooks/useAccount'
@@ -32,12 +31,10 @@ import { WagmiProvider, useAccount as useAccountWagmi } from 'wagmi'
 export default function Web3Provider({ children }: { children: ReactNode }) {
   return (
     <WagmiProvider config={wagmiConfig}>
-      <QueryClientProvider client={queryClient}>
-        <ConnectionProvider>
-          <WalletCapabilitiesEffects />
-          {children}
-        </ConnectionProvider>
-      </QueryClientProvider>
+      <ConnectionProvider>
+        <WalletCapabilitiesEffects />
+        {children}
+      </ConnectionProvider>
     </WagmiProvider>
   )
 }

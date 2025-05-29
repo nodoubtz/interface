@@ -61,7 +61,7 @@ export function IntroScreen(): JSX.Element {
                 }
               >
                 {isPasskeyImportEnabled
-                  ? t('onboarding.intro.button.signInOrImport')
+                  ? t('onboarding.intro.button.logInOrImport')
                   : t('onboarding.intro.button.alreadyHave')}
               </Button>
             </Flex>

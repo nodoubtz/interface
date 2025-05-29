@@ -35,6 +35,7 @@ export enum FeatureFlags {
 
   // Wallet
   DisableFiatOnRampKorea,
+  EnableTransactionSpacingForDelegatedAccounts,
   ExtensionAutoConnect,
   NotificationPriceAlertsAndroid,
   NotificationPriceAlertsIOS,
@@ -123,6 +124,7 @@ export const WALLET_FEATURE_FLAG_NAMES = new Map<FeatureFlags, string>([
   [FeatureFlags.BlurredLockScreen, 'blurred_lock_screen'],
   [FeatureFlags.DisableFiatOnRampKorea, 'disable-fiat-onramp-korea'],
   [FeatureFlags.Eip5792Methods, 'eip_5792_methods'],
+  [FeatureFlags.EnableTransactionSpacingForDelegatedAccounts, 'enable_transaction_spacing_for_delegated_accounts'],
   [FeatureFlags.ExtensionAutoConnect, 'extension-auto-connect'],
   [FeatureFlags.NotificationOnboardingCard, 'notification_onboarding_card'],
   [FeatureFlags.NotificationPriceAlertsAndroid, 'notification_price_alerts_android'],

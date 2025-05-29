@@ -76,12 +76,6 @@ exports[`PoolDetailsStatsButton renders both buttons correctly 1`] = `
   pointer-events: none;
 }
 
-.c0 {
-  box-sizing: border-box;
-  margin: 0;
-  min-width: 0;
-}
-
 .c3 {
   display: -webkit-box;
   display: -webkit-flex;
@@ -94,6 +88,12 @@ exports[`PoolDetailsStatsButton renders both buttons correctly 1`] = `
   -webkit-justify-content: flex-start;
   -ms-flex-pack: start;
   justify-content: flex-start;
+}
+
+.c0 {
+  box-sizing: border-box;
+  margin: 0;
+  min-width: 0;
 }
 
 .c1 {

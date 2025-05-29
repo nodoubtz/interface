@@ -436,7 +436,7 @@ exports[`ExpandoRow matches snapshot when expanded 1`] = `
                       "type": 2,
                     }
                   }
-                  strokeWidth="0.5"
+                  strokeWidth="0.4"
                 />
               </RNSVGGroup>
             </RNSVGSvgView>
